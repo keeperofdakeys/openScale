@@ -22,6 +22,7 @@ import android.util.SparseArray;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 import com.health.openscale.core.bluetooth.driver.*;
 
@@ -151,11 +152,14 @@ public class BluetoothFactory {
             return BluetoothActiveEraBF06.driverId();
         }
         if (deviceName.equals("Renpho-Scale")) {
-            /* Driver for Renpho ES-WBE28, which has device name of "Renpho-Scale".
-               "Renpho-Scale" is quite generic, not sure if other Renpho scales with different
-               protocol match this name.
-             */
-            return BluetoothESWBE28.driverId();
+            ParcelUUID renpho_uuid = new ParcelUUID(UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb"));
+            // Some versions of ES-CS20M are called Renpho-Scale, but use QNScale protocol
+            if (serviceUUIDs.contains(renpho_uuid)) {
+                return BluetoothQNScale.driverId();
+            // Otherwise Renpho-Scale is an ES-WBE28
+            } else {
+                return BluetoothESWBE28.driverId();
+            }
         }
         if(deviceName.equals("ES-CS20M")){
             return BluetoothESCS20M.driverId();
@@ -277,12 +281,6 @@ public class BluetoothFactory {
         }
 
         return null;
-    }
-
-    public static BluetoothCommunication createDeviceDriver(Context context, String deviceName) {
-        String driverId = getDriverIdFromDeviceName(deviceName, null);
-        if (driverId == null) return null;
-        return createDriverById(context, deviceName, driverId);
     }
 
     public static BluetoothCommunication createDeviceDriver(Context context, String deviceName, List<ParcelUuid> serviceUuids) {
